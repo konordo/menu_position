@@ -71,7 +71,6 @@ function menu_position_menu() {
     'description' => 'Configure rules for menu positions.',
     'access arguments' => array('administer menu positions'),
     'page callback' => 'menu_position_rules_form_callback',
-    'type' => MENU_NORMAL_ITEM,
     'file' => 'menu_position.admin.inc',
   );
   $items['admin/structure/menu-position/list'] = array(
@@ -94,25 +93,25 @@ function menu_position_menu() {
     'description' => 'Add a new menu position rule.',
     'access arguments' => array('administer menu positions'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('menu_position_add_rule_form'),
+    'page arguments' => array('menu_position_rule_edit_form'),
     'type' => MENU_LOCAL_ACTION,
     'file' => 'menu_position.admin.inc',
   );
-  $items['admin/structure/menu-position/edit'] = array(
+  $items['admin/structure/menu-position/%menu_position_rule/edit'] = array(
     'title' => 'Edit menu position rule',
     'description' => 'Edit a menu position rule.',
     'access arguments' => array('administer menu positions'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('menu_position_edit_rule_form'),
+    'page arguments' => array('menu_position_rule_edit_form', 3),
     'type' => MENU_CALLBACK,
     'file' => 'menu_position.admin.inc',
   );
-  $items['admin/structure/menu-position/delete'] = array(
+  $items['admin/structure/menu-position/%menu_position_rule/delete'] = array(
     'title' => 'Delete menu position rule',
     'description' => 'Delete a menu position rule.',
     'access arguments' => array('administer menu positions'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('menu_position_delete_rule_form'),
+    'page arguments' => array('menu_position_rule_delete_form', 3),
     'type' => MENU_CALLBACK,
     'file' => 'menu_position.admin.inc',
   );

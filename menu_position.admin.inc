@@ -45,7 +45,7 @@ function _menu_position_form_menu_overview_form_alter(&$form, &$form_state) {
       $form['mlid:' . $mlid]['hidden']['#default_value'] = TRUE;
       $form['mlid:' . $mlid]['hidden']['#disabled'] = TRUE;
       // Alter the edit link for this menu item.
-      $form['mlid:' . $mlid]['operations']['edit']['#href'] = 'admin/structure/menu-position/edit/' . $rule->rid;
+      $form['mlid:' . $mlid]['operations']['edit']['#href'] = 'admin/structure/menu-position/' . $rule->rid . '/edit';
       $form['mlid:' . $mlid]['operations']['edit']['#options'] = array('query' => array('destination' => $_GET['q']));
     }
   }
@@ -199,12 +199,12 @@ function menu_position_rules_form($form, &$form_state) {
           'edit-link' => array(
             '#type' => 'link',
             '#title' => t('edit'),
-            '#href' => 'admin/structure/menu-position/edit/' . $rule->rid,
+            '#href' => 'admin/structure/menu-position/' . $rule->rid . '/edit',
           ),
           'delete-link' => array(
             '#type' => 'link',
             '#title' => t('delete'),
-            '#href' => 'admin/structure/menu-position/delete/' . $rule->rid,
+            '#href' => 'admin/structure/menu-position/' . $rule->rid . '/delete',
           ),
         ),
       );
@@ -300,30 +300,18 @@ function theme_menu_position_rules_order($variables) {
 }
 
 /**
- * Menu callback; Adds rules.
- */
-function menu_position_add_rule_form($form, &$form_state) {
-  return menu_position_rule_form($form, $form_state);
-}
-
-/**
- * Menu callback; Edits rules.
- */
-function menu_position_edit_rule_form($form, &$form_state, $rid = 0) {
-  // Make sure rid is set.
-  if ($rid == 0) {
-    drupal_goto('admin/structure/menu-position');
-    return;
-  }
-  // Grab the rule from the database.
-  $form_state['#menu-position-rule'] = menu_position_rule_load($rid);
-  return menu_position_rule_form($form, $form_state);
-}
-
-/**
  * Returns form to add or edit a menu position rule.
  */
-function menu_position_rule_form($form, &$form_state) {
+function menu_position_rule_edit_form($form, &$form_state, $rule = NULL) {
+dsm($rule);
+  if (!isset($rule)) {
+    
+  }
+  else {
+    // Grab the rule from the database.
+    $rule;
+    $form_state['#menu-position-rule'] = menu_position_read_rule($rid);
+  }
   // Set the default values.
   $rid          = !empty($form_state['#menu-position-rule']->rid)         ? $form_state['#menu-position-rule']->rid : '';
   $admin_title  = !empty($form_state['#menu-position-rule']->admin_title) ? $form_state['#menu-position-rule']->admin_title : '';
@@ -396,24 +384,20 @@ function menu_position_rule_form($form, &$form_state) {
     // Call form callback to add additional form elements.
     $function = $plugin['form_callback'];
     if (function_exists($function)) {
-      $function($form, $form_state);
+      $function($form, $form_state, $rule);
     }
   }
-
-  // Form validation and submission.
-  $form['#validate'][] = 'menu_position_rule_form_validate';
-  $form['#submit'][] = 'menu_position_rule_form_submit';
 
   return $form;
 }
 
 /**
- * Validates the form for menu_position_rule_form().
+ * Validates the form for menu_position_rule_edit_form().
  */
-function menu_position_rule_form_validate($form, &$form_state) {
+function menu_position_rule_edit_form_validate($form, &$form_state) {
   // Check if the user deleted the rule.
   if (!empty($form['delete']) && $form_state['values']['op'] == $form['delete']['#value']) {
-    drupal_goto('admin/structure/menu-position/delete/' . $form_state['values']['rid']);
+    drupal_goto('admin/structure/menu-position/' . $form_state['values']['rid'] . '/delete');
     return;
   }
   // Don't allow the user to select a menu name instead of a menu item.
@@ -424,9 +408,9 @@ function menu_position_rule_form_validate($form, &$form_state) {
 }
 
 /**
- * Handles form submission for menu_position_rule_form().
+ * Handles form submission for menu_position_rule_edit_form().
  */
-function menu_position_rule_form_submit($form, &$form_state) {
+function menu_position_rule_edit_form_submit($form, &$form_state) {
   list($menu_name, $plid) = explode(':', $form_state['values']['plid']);
   $rule = new stdClass();
   $rule->admin_title = $form_state['values']['admin_title'];
@@ -451,7 +435,7 @@ function menu_position_rule_form_submit($form, &$form_state) {
 /**
  * Menu callback: confirms deletion of rule.
  */
-function menu_position_delete_rule_form($form, &$form_state, $rid = 0) {
+function menu_position_rule_delete_form($form, &$form_state, $rid = 0) {
   // Make sure rid is set.
   if ($rid == 0) {
     drupal_goto('admin/structure/menu-position');
@@ -461,13 +445,13 @@ function menu_position_delete_rule_form($form, &$form_state, $rid = 0) {
 
   $title = db_query('SELECT admin_title FROM {menu_position_rules} WHERE rid = :rid', array(':rid' => $rid))->fetchField();
 
-  return confirm_form($form, t('Are you sure you want to delete the %title rule?', array('%title' => $title)), 'admin/structure/menu-position/edit/' . $rid, NULL, t('Delete'), t('Cancel'));
+  return confirm_form($form, t('Are you sure you want to delete the %title rule?', array('%title' => $title)), 'admin/structure/menu-position/' . $rid . '/edit', NULL, t('Delete'), t('Cancel'));
 }
 
 /**
- * Handles form submission for menu_position_delete_rule_form().
+ * Handles form submission for menu_position_rule_delete_form().
  */
-function menu_position_delete_rule_form_submit($form, &$form_state) {
+function menu_position_rule_delete_form_submit($form, &$form_state) {
   $title = db_query('SELECT admin_title FROM {menu_position_rules} WHERE rid = :rid', array(':rid' => $form_state['values']['rid']))->fetchField();
 
   menu_position_delete_rule($form_state['values']['rid']);
