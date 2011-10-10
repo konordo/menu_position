@@ -20,14 +20,14 @@ function HOOK_menu_position_condition_PLUGIN($variables) {
   // Grab the variables stored statically in the rule.
   $lolspeak = $variables['lolspeak'];
 
-  // $node is dynamically added and may not exist.
-  $node = isset($variables['context']['node']) ? $variables['context']['node'] : NULL;
+  // First return TRUE if the condition does not apply to the current context.
+  if (empty($lolspeak) || empty($variables['context']['node'])) {
+    return TRUE;
+  }
 
-  // Retrieve any extra data needed to determine the condition's result.
-
-  // Business logic goes here.
-
-  return ($lolspeak && $node && $node->language == 'lolspeak') ? TRUE : FALSE;
+  // Return a boolean based on if the current context matches the conditions.
+  $node = $variables['context']['node'];
+  return $node->language == 'lolspeak';
 }
 
 /**
@@ -45,9 +45,9 @@ function HOOK_menu_position_condition_PLUGIN($variables) {
  * @param $form_state
  *   A reference to the current form state.
  */
-function HOOK_menu_position_rule_PLUGIN_form(&$form, &$form_state) {
+function HOOK_menu_position_rule_PLUGIN_form(&$form, &$form_state, $rule) {
   // If this is an existing rule, load the variables stored in the rule for this plugin.
-  $variables = !empty($form_state['#menu-position-rule']->conditions['PLUGIN']) ? $form_state['#menu-position-rule']->conditions['PLUGIN'] : array();
+  $variables = !empty($rule->conditions['PLUGIN']) ? $rule->conditions['PLUGIN'] : array();
 
   // To ensure that the plugin's form elements are placed inside vertical tabs,
   // all elements should be placed inside a collapsed fielset inside the

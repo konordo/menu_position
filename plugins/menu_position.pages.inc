@@ -15,17 +15,15 @@
  */
 function menu_position_menu_position_condition_pages($variables) {
   // Grab the variables stored statically in the rule.
-  $pages = $variables['pages'];
+  $pages = trim($variables['pages']);
 
-  // Convert the Drupal path to lowercase.
-  $path = drupal_strtolower(drupal_get_path_alias($_GET['q']));
-  // Compare the lowercase internal and lowercase path alias (if any).
-  $page_match = drupal_match_path($path, $pages);
-  if (!$page_match && $path != $_GET['q']) {
-    $page_match = drupal_match_path($_GET['q'], $pages);
+  // If no paths have been entered, skip this condition.
+  if (!drupal_strlen($pages)) {
+    return TRUE;
   }
 
-  return $page_match;
+  $path = isset($variables['context']['path']) ? $variables['context']['path'] : current_path();
+  return drupal_match_path($path, $pages) || drupal_match_path(drupal_get_path_alias($path), $pages);
 }
 
 /**
@@ -37,9 +35,9 @@ function menu_position_menu_position_condition_pages($variables) {
  * @param $form_state
  *   A reference to the current form state.
  */
-function menu_position_menu_position_rule_pages_form(&$form, &$form_state) {
+function menu_position_menu_position_rule_pages_form(&$form, &$form_state, $rule) {
   // If this is an existing rule, load the variables stored in the rule for this plugin.
-  $variables = !empty($form_state['#menu-position-rule']->conditions['pages']) ? $form_state['#menu-position-rule']->conditions['pages'] : array();
+  $variables = !empty($rule->conditions['pages']) ? $rule->conditions['pages'] : array();
 
   $form['conditions']['pages'] = array(
     '#type' => 'fieldset',
@@ -53,7 +51,7 @@ function menu_position_menu_position_rule_pages_form(&$form, &$form_state) {
   $form['conditions']['pages']['pages'] = array(
     '#type' => 'textarea',
     '#title' => t('Pages'),
-    '#default_value' => !empty($variables['pages']) ? $variables['pages'] : '',
+    '#default_value' => isset($variables['pages']) ? $variables['pages'] : '',
     '#description' => t("Specify pages by using their paths. Enter one path per line. The '*' character is a wildcard. Example paths are %blog for the blog page and %blog-wildcard for every personal blog. %front is the front page.", array('%blog' => 'blog', '%blog-wildcard' => 'blog/*', '%front' => '<front>')),
     '#weight' => -20,
   );
@@ -72,10 +70,10 @@ function menu_position_menu_position_rule_pages_form(&$form, &$form_state) {
  */
 function menu_position_menu_position_rule_pages_form_submit(&$form, &$form_state) {
   // The user has added our plugin's form elements as a condition for the rule.
-  if (!empty($form_state['values']['pages'])) {
+  if (!empty($form_state['values']['conditions']['pages'])) {
     // Add this plugin's variables to the rule.
     $variables = array(
-      'pages' => drupal_strtolower(trim($form_state['values']['pages'])),
+      'pages' => drupal_strtolower(trim($form_state['values']['conditions']['pages']['pages'])),
     );
     $form_state['values']['conditions']['pages'] = $variables;
   }

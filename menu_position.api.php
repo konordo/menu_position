@@ -62,5 +62,33 @@ function hook_menu_position_rule_plugins() {
 }
 
 /**
+ * Alter a menu position rule before it is saved.
+ */
+function hook_menu_position_rule_presave($rule) {
+  $rule->admin_title = 'Changed title';
+}
+
+/**
+ * React after a new menu position rule has been saved.
+ */
+function hook_menu_position_rule_insert($rule) {
+  // Do something.
+}
+
+/**
+ * React after an existing menu position rule has been saved.
+ */
+function hook_menu_position_rule_update($rule) {
+  // Do something.
+}
+
+/**
+ * React after a menu position rule has been deleted.
+ */
+function hook_menu_position_rule_delete($rule) {
+  // Do something.
+}
+
+/**
  * @} End of "addtogroup hooks".
  */
