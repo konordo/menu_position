@@ -227,7 +227,7 @@ function menu_position_evaluate_rules($context = array()) {
   }
 
   // Retrieve the rules from the database. For speed, we don't call
-  // menu_position_read_rules() and unserialize the conditions only if needed.
+  // menu_position_rule_load_multiple() and unserialize the conditions only if needed.
   $rules = db_query('SELECT * FROM {menu_position_rules} WHERE enabled = :enabled ORDER BY weight, rid', array(':enabled' => 1));
 
   // Retrieve the list of menus the path is already in.
@@ -489,18 +489,38 @@ function menu_position_rule_load($rid) {
 }
 
 /**
- * Retrieves a menu position rule from the database.
+ * Load multiple menu position rules.
+ *
+ * @param $rids
+ *   An optional array of menu position rule IDs; if not specified, all are loaded.
+ * @param $only_enabled
+ *   A flag indicating if the returned rules should be limited to enabled rules.
  *
  * @return
  *   An associative array for all rules with keys equal to the rid of each rule.
  */
-function menu_position_read_rules() {
-  $query = db_query('SELECT * FROM {menu_position_rules} ORDER BY weight, rid');
-  $rules = array();
-  foreach ($query as $rule) {
-    $rule['conditions'] = unserialize($rule['conditions']);
-    $rules[$rule['rid']] = $rule;
+function menu_position_rule_load_multiple($rids = NULL, $only_enabled = FALSE) {
+  // Check for the degenerate case.
+  if ($rids === array()) {
+    return array();
   }
+
+  $query = db_select('menu_position_rules');
+  $query->fields('menu_position_rules');
+  if ($only_enabled) {
+    $query->condition('enabled', 1);
+  }
+  if (!empty($rids)) {
+    $query->condition('rid', $rids, 'IN');
+  }
+  $query->orderBy('weight')->orderBy('rid');
+  $rules = $query->execute()->fetchAllAssoc('rid');
+
+  // Extract the conditions serialized array.
+  foreach (array_keys($rules) as $rid) {
+    $rules[$rid]->conditions = unserialize($rules[$rid]->conditions);
+  }
+
   return $rules;
 }
 
