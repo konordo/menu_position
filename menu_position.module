@@ -468,3 +468,171 @@ function menu_position_get_condition_callback($plugin) {
 
   return $callback;
 }
+
+/**
+ * Retrieves a menu position rule from the database.
+ *
+ * @param $rid
+ *   The ID of the requested rule.
+ * @return
+ *   An associative array for the requested rule.
+ */
+function menu_position_read_rule($rid) {
+  $rule = db_query('SELECT * FROM {menu_position_rules} WHERE rid = :rid', array(':rid' => $rid))->fetchAssoc();
+  $rule['conditions'] = unserialize($rule['conditions']);
+  return $rule;
+}
+
+/**
+ * Retrieves a menu position rule from the database.
+ *
+ * @return
+ *   An associative array for all rules with keys equal to the rid of each rule.
+ */
+function menu_position_read_rules() {
+  $query = db_query('SELECT * FROM {menu_position_rules} ORDER BY weight, rid');
+  $rules = array();
+  foreach ($query as $rule) {
+    $rule['conditions'] = unserialize($rule['conditions']);
+    $rules[$rule['rid']] = $rule;
+  }
+  return $rules;
+}
+
+/**
+ * Adds a menu position rule.
+ *
+ * @param $rule
+ *   An associate array defining the new rule to be created. Must contain the
+ *   following keys:
+ *   - admin_title: The administrative title of the rule.
+ *   - conditions: An associative array whose keys are the machine names of the
+ *     plugins actively configured in the rule. The value of each array element
+ *     is array containing the necessary variables for that plugin.
+ *   - menu_name: The machine name of the menu where this rule is positioned.
+ *   - plid: The mlid of the parent menu link specified in the rule.
+ */
+function menu_position_add_rule($rule) {
+  $fields = array(
+    'admin_title' => $rule['admin_title'],
+    'conditions'  => serialize($rule['conditions']),
+    'menu_name'   => $rule['menu_name'],
+    'plid'        => $rule['plid'],
+  );
+  $rid = db_insert('menu_position_rules')
+    ->fields($fields)
+    ->execute();
+
+  $mlid = menu_position_add_menu_link($rid, $rule['plid'], $rule['admin_title']);
+
+  // Now add the mlid back to the rule.
+  db_update('menu_position_rules')
+    ->fields(array('mlid' => $mlid))
+    ->condition('rid', $rid)
+    ->execute();
+}
+
+/**
+ * Edits a menu position rule.
+ *
+ * @param $rule
+ *   An associate array defining the rule to be edited. Must contain the
+ *   following keys:
+ *   - rid: The rule ID.
+ *   - admin_title: The administrative title of the rule.
+ *   - conditions: An associative array whose keys are the machine names of the
+ *     plugins actively configured in the rule. The value of each array element
+ *     is array containing the necessary variables for that plugin.
+ *   - menu_name: The machine name of the menu where this rule is positioned.
+ *   - plid: The mlid of the parent menu link specified in the rule.
+ */
+function menu_position_edit_rule($rule) {
+  $fields = array(
+    'admin_title' => $rule['admin_title'],
+    'conditions'  => serialize($rule['conditions']),
+    'menu_name'   => $rule['menu_name'],
+    'plid'        => $rule['plid'],
+  );
+  // Update the rule.
+  db_update('menu_position_rules')
+    ->condition('rid', $rule['rid'])
+    ->fields($fields)
+    ->execute();
+  // Update the link.
+  $mlid = db_query('SELECT mlid FROM {menu_position_rules} WHERE rid = :rid', array(':rid' => $rule['rid']))->fetchField();
+  menu_position_edit_menu_link($rule['rid'], $mlid, $rule['plid'], $rule['admin_title']);
+}
+
+/**
+ * Deletes a menu position rule.
+ */
+function menu_position_delete_rule($rid) {
+  db_delete('menu_position_rules')
+    ->condition('rid', $rid)
+    ->execute();
+  menu_link_delete(NULL, 'menu-position/' . $rid);
+}
+
+/**
+ * Adds a menu position rule.
+ *
+ * @param $rid
+ *   ID of the rule needing a menu link.
+ * @param $plid
+ *   The mlid of the parent menu link specified in the rule.
+ * @param $admin_title
+ *   The administrative title of the rule.
+ * @return
+ *   The mlid of the rule's new menu link.
+ */
+function menu_position_add_menu_link($rid, $plid, $admin_title) {
+  // Add a menu link to handle matching pages. Passing NULL as the mlid will
+  // cause menu_link_save() to add a new menu link.
+  return menu_position_edit_menu_link($rid, NULL, $plid, $admin_title);
+}
+
+/**
+ * Adds a menu position rule.
+ *
+ * @param $rid
+ *   ID of the rule needing a menu link.
+ * @param $mlid
+ *   The mlid of the menu link used in the rule.
+ * @param $plid
+ *   The mlid of the parent menu link specified in the rule.
+ * @param $admin_title
+ *   The administrative title of the rule.
+ * @return
+ *   The mlid of the rule's new menu link.
+ */
+function menu_position_edit_menu_link($rid, $mlid, $plid, $admin_title) {
+  // Add a menu link to handle matching pages.
+  $item = array(
+    'link_path' => 'menu-position/' . $rid,
+    'link_title' => $admin_title . ' (menu position rule)',
+    'mlid' => $mlid,
+    'plid' => $plid,
+    'hidden' => 1,
+    'module' => 'menu_position',
+    'options' => array(
+      'alter' => TRUE,
+      'attributes' => array('class' => array('menu-position-link')),
+    ),
+  );
+  // If this is an existing menu link, get the existing weight.
+  if ($item['mlid']) {
+    $existing_item = db_query("SELECT plid, weight FROM {menu_links} WHERE mlid = :mlid", array(':mlid' => $item['mlid']))->fetchAssoc();
+    $item['weight'] = ($existing_item['plid'] == $plid) ? $existing_item['weight'] : 0;
+    // If the rule has a new parent, update the old parent.
+    if ($existing_item['plid'] != $item['plid']) {
+      $old_parent = menu_link_load($existing_item['plid']);
+      $old_parent['options']['alter'] = FALSE;
+      menu_link_save($old_parent);
+    }
+  }
+  // Update the new parent.
+  $parent = menu_link_load($item['plid']);
+  $parent['options']['alter'] = TRUE;
+  menu_link_save($parent);
+  return menu_link_save($item);
+}
