@@ -316,7 +316,7 @@ function menu_position_edit_rule_form($form, &$form_state, $rid = 0) {
     return;
   }
   // Grab the rule from the database.
-  $form_state['#menu-position-rule'] = menu_position_read_rule($rid);
+  $form_state['#menu-position-rule'] = menu_position_rule_load($rid);
   return menu_position_rule_form($form, $form_state);
 }
 
