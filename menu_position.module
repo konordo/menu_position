@@ -478,14 +478,8 @@ function menu_position_get_condition_callback($plugin) {
  *   An object for the requested rule or FALSE if the rule is not found.
  */
 function menu_position_rule_load($rid) {
-  $rule = db_query('SELECT * FROM {menu_position_rules} WHERE rid = :rid', array(':rid' => $rid))->fetch();
-  if ($rule) {
-    $rule->conditions = unserialize($rule->conditions);
-  }
-  else {
-    $rule = FALSE;
-  }
-  return $rule;
+  $rules = menu_position_rule_load_multiple(array($rid));
+  return isset($rules[$rid]) ? $rules[$rid] : FALSE;
 }
 
 /**
