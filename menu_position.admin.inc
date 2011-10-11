@@ -428,21 +428,20 @@ function menu_position_rule_form_validate($form, &$form_state) {
  */
 function menu_position_rule_form_submit($form, &$form_state) {
   list($menu_name, $plid) = explode(':', $form_state['values']['plid']);
-  $rule = array(
-    'admin_title' => $form_state['values']['admin_title'],
-    'conditions'  => isset($form_state['values']['conditions']) ? $form_state['values']['conditions'] : array(),
-    'menu_name'   => $menu_name,
-    'plid'        => $plid,
-  );
+  $rule = new stdClass();
+  $rule->admin_title = $form_state['values']['admin_title'];
+  $rule->conditions  = isset($form_state['values']['conditions']) ? $form_state['values']['conditions'] : array();
+  $rule->menu_name   = $menu_name;
+  $rule->plid        = $plid;
   // Add the rule to the database.
   if ($form_state['values']['rid'] == '') {
-    menu_position_add_rule($rule);
+    menu_position_rule_save($rule);
     drupal_set_message(t('Rule has been added.'));
   }
   // Update an exisiting rule.
   else {
-    $rule['rid'] = $form_state['values']['rid'];
-    menu_position_edit_rule($rule);
+    $rule->rid = $form_state['values']['rid'];
+    menu_position_rule_save($rule);
     drupal_set_message(t('Rule has been modified.'));
   }
 
