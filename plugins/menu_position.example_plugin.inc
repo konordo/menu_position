@@ -34,7 +34,7 @@ function HOOK_menu_position_condition_PLUGIN($variables) {
  * Adds form elements for the PLUGIN plugin to the rule configuration form.
  *
  * If this condition was active in the current rule, the plug-in variables will
- * be available in $form_state['#menu-position-rule']['conditions']['PLUGIN'].
+ * be available in $form_state['#menu-position-rule']->conditions['PLUGIN'].
  *
  * It is the resposibility of this hook to add any necessary form validation and
  * submission handlers.
@@ -47,7 +47,7 @@ function HOOK_menu_position_condition_PLUGIN($variables) {
  */
 function HOOK_menu_position_rule_PLUGIN_form(&$form, &$form_state) {
   // If this is an existing rule, load the variables stored in the rule for this plugin.
-  $variables = !empty($form_state['#menu-position-rule']['conditions']['PLUGIN']) ? $form_state['#menu-position-rule']['conditions']['PLUGIN'] : array();
+  $variables = !empty($form_state['#menu-position-rule']->conditions['PLUGIN']) ? $form_state['#menu-position-rule']->conditions['PLUGIN'] : array();
 
   // To ensure that the plugin's form elements are placed inside vertical tabs,
   // all elements should be placed inside a collapsed fielset inside the

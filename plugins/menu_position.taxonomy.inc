@@ -74,7 +74,7 @@ function menu_position_menu_position_condition_taxonomy($variables) {
  */
 function menu_position_menu_position_rule_taxonomy_form(&$form, &$form_state) {
   // If this is an existing rule, load the variables stored in the rule for this plugin.
-  $variables = !empty($form_state['#menu-position-rule']['conditions']['taxonomy']) ? $form_state['#menu-position-rule']['conditions']['taxonomy'] : array();
+  $variables = !empty($form_state['#menu-position-rule']->conditions['taxonomy']) ? $form_state['#menu-position-rule']->conditions['taxonomy'] : array();
 
   // Load the taxonomy terms.
   if (!empty($variables['tid'])) {

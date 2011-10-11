@@ -29,7 +29,7 @@ function menu_position_menu_position_condition_content_type($variables) {
  */
 function menu_position_menu_position_rule_content_type_form(&$form, &$form_state) {
   // If this is an existing rule, load the variables stored in the rule for this plugin.
-  $variables = !empty($form_state['#menu-position-rule']['conditions']['content_type']) ? $form_state['#menu-position-rule']['conditions']['content_type'] : array();
+  $variables = !empty($form_state['#menu-position-rule']->conditions['content_type']) ? $form_state['#menu-position-rule']->conditions['content_type'] : array();
 
   $form['conditions']['content_type'] = array(
     '#type' => 'fieldset',

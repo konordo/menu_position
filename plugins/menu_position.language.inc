@@ -29,7 +29,7 @@ function menu_position_menu_position_condition_language($variables) {
  */
 function menu_position_menu_position_rule_language_form(&$form, &$form_state) {
   // If this is an existing rule, load the variables stored in the rule for this plugin.
-  $variables = !empty($form_state['#menu-position-rule']['conditions']['language']) ? $form_state['#menu-position-rule']['conditions']['language'] : array();
+  $variables = !empty($form_state['#menu-position-rule']->conditions['language']) ? $form_state['#menu-position-rule']->conditions['language'] : array();
 
   $form['conditions']['language'] = array(
     '#type' => 'fieldset',

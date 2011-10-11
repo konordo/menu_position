@@ -39,7 +39,7 @@ function menu_position_menu_position_condition_pages($variables) {
  */
 function menu_position_menu_position_rule_pages_form(&$form, &$form_state) {
   // If this is an existing rule, load the variables stored in the rule for this plugin.
-  $variables = !empty($form_state['#menu-position-rule']['conditions']['pages']) ? $form_state['#menu-position-rule']['conditions']['pages'] : array();
+  $variables = !empty($form_state['#menu-position-rule']->conditions['pages']) ? $form_state['#menu-position-rule']->conditions['pages'] : array();
 
   $form['conditions']['pages'] = array(
     '#type' => 'fieldset',

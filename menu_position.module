@@ -470,16 +470,21 @@ function menu_position_get_condition_callback($plugin) {
 }
 
 /**
- * Retrieves a menu position rule from the database.
+ * Load a menu position rule.
  *
  * @param $rid
  *   The ID of the requested rule.
  * @return
- *   An associative array for the requested rule.
+ *   An object for the requested rule or FALSE if the rule is not found.
  */
 function menu_position_rule_load($rid) {
-  $rule = db_query('SELECT * FROM {menu_position_rules} WHERE rid = :rid', array(':rid' => $rid))->fetchAssoc();
-  $rule['conditions'] = unserialize($rule['conditions']);
+  $rule = db_query('SELECT * FROM {menu_position_rules} WHERE rid = :rid', array(':rid' => $rid))->fetch();
+  if ($rule) {
+    $rule->conditions = unserialize($rule->conditions);
+  }
+  else {
+    $rule = FALSE;
+  }
   return $rule;
 }
 
